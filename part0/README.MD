@@ -1,0 +1,2 @@
+# PART 0
+In this section, we'll cover the practical aspects of the course. Then, we'll review the fundamentals of web development and discuss the significant advancements in web application development over the past few decades.
