@@ -1,35 +1,38 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import CountryViewer from './components/CountryViewer';
+import axios from 'axios'
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const url = 'https://studies.cs.helsinki.fi/restcountries/api';
+  const [searchText, updateSearchText] = useState('');
+  const [countryData, updateCountryData] = useState([]);
+
+  const loadCountryData = (event) => {
+    const search = event.target.value;
+    updateSearchText(search)
+    axios.get(`${url}/all`).then(res => {
+      const filteredData = res.data.filter(country => country.name.official.toLowerCase().includes(search.toLowerCase()))
+      updateCountryData(filteredData)
+    })
+  }
+
+  const loadSpecificCountry = name=>{
+    updateSearchText(name)
+    axios.get(`${url}/name/${name}`).then(res => {
+      updateCountryData(res.data)
+    })
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="App">
+      <header className="App-header">
+        <h1>Find countries</h1>
+        <input placeholder="search" onChange={loadCountryData} value={searchText} type="search" />
+        <CountryViewer loadSpecificCountry={loadSpecificCountry} countries={countryData} />
+      </header>
+    </div>
+  );
 }
 
-export default App
+export default App;
