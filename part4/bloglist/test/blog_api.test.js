@@ -22,6 +22,40 @@ test('blogs are returned as JSON and the correct number', async () => {
   expect(response.body).toHaveLength(2);
 });
 
+test('a blog can be deleted', async () => {
+  const blogsAtStart = await Blog.find({});
+  const blogToDelete = blogsAtStart[0];
+
+  await api
+    .delete(`/api/blogs/${blogToDelete.id}`)
+    .expect(204);
+
+  const blogsAtEnd = await Blog.find({});
+  expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1);
+});
+
+test('a blog\'s likes can be updated', async () => {
+  const blogsAtStart = await Blog.find({});
+  const blogToUpdate = blogsAtStart[0];
+
+  const updatedBlogData = {
+    likes: blogToUpdate.likes + 1,
+  };
+
+  const response = await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(updatedBlogData)
+    .expect(200)
+    .expect('Content-Type', /application\/json/);
+
+  expect(response.body.likes).toBe(blogToUpdate.likes + 1);
+
+  const blogsAtEnd = await Blog.find({});
+  const updatedBlog = blogsAtEnd.find(b => b.id === blogToUpdate.id);
+  expect(updatedBlog.likes).toBe(blogToUpdate.likes + 1);
+});
+
+
 afterAll(() => {
   mongoose.connection.close();
 });

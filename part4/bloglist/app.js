@@ -3,13 +3,18 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const Blog = require('./models/blog'); // Assuming the Blog model is defined in models/blog.js
+const usersRouter = require('./controllers/users');
+app.use('/api/users', usersRouter);
+const loginRouter = require('./controllers/login');
+app.use('/api/login', loginRouter);
+const middleware = require('./utils/middleware');
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
+app.use(middleware.tokenExtractor);
 // Connect to MongoDB
 const mongoUrl = process.env.MONGODB_URI;
 mongoose.connect(mongoUrl, {
@@ -77,7 +82,37 @@ app.use((error, req, res, next) => {
   next(error);
 });
 
+// Delete a blog by ID
+app.delete('/api/blogs/:id', async (req, res) => {
+  try {
+    const blogId = req.params.id;
+    await Blog.findByIdAndRemove(blogId);
+    res.status(204).end();
+  } catch (error) {
+    res.status(400).json({ error: 'Malformed ID or blog not found' });
+  }
+});
 
+// Update a blog by ID
+app.put('/api/blogs/:id', async (req, res) => {
+  const { likes } = req.body;
+  const updatedData = { likes };
+
+  try {
+    const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, updatedData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (updatedBlog) {
+      res.json(updatedBlog);
+    } else {
+      res.status(404).json({ error: 'Blog not found' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: 'Malformed ID' });
+  }
+});
 
 // Export the app for testing
 module.exports = app;
